@@ -1,8 +1,15 @@
+using CTWebApi.Services;
 using Polly;
 using Polly.Extensions.Http;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+/*
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    EnvironmentName = Environments.Production
+});
+*/
 
 var logger = new LoggerConfiguration()
   .ReadFrom.Configuration(builder.Configuration)
@@ -12,10 +19,14 @@ var logger = new LoggerConfiguration()
 builder.Logging.ClearProviders();
 builder.Logging.AddSerilog(logger);
 
+
+builder.Services.AddScoped<IGitHubUserService, GitHubUserService>();
+
 // Add services to the container.
 builder.Services.AddHttpClient("default")
     .SetHandlerLifetime(TimeSpan.FromMinutes(5))  //Set lifetime to five minutes
         .AddPolicyHandler(GetRetryPolicy());
+
 
 IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
 {
